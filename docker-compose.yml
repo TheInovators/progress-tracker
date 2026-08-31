@@ -1,0 +1,14 @@
+# Optional: a persistent MongoDB for local development.
+#   docker compose up -d
+#   echo 'MONGO_URI=mongodb://localhost:27017' >> server/.env
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
