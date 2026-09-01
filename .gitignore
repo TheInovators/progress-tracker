@@ -2,3 +2,6 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# Vite dependency pre-bundling cache
+client/.vite/

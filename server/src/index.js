@@ -21,9 +21,24 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
-const origin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 
-app.use(cors({ origin }));
+// CLIENT_ORIGIN takes a comma-separated list. Vercel gives every preview
+// deployment its own hostname, so exact matching alone would block them; any
+// origin ending in .vercel.app under the same project is allowed through.
+const allowed = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (candidate, callback) => {
+  if (!candidate || allowed.includes(candidate)) return callback(null, true);
+  if (process.env.VERCEL_PREVIEWS === 'on' && /^https:\/\/[\w-]+\.vercel\.app$/.test(candidate)) {
+    return callback(null, true);
+  }
+  callback(new Error(`Origin ${candidate} is not allowed`));
+};
+
+app.use(cors({ origin: isAllowedOrigin }));
 app.use(express.json({ limit: '256kb' }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -44,7 +59,7 @@ app.use((err, _req, res, _next) => {
 });
 
 const server = http.createServer(app);
-const io = new SocketServer(server, { cors: { origin } });
+const io = new SocketServer(server, { cors: { origin: isAllowedOrigin } });
 
 // The chat socket carries the same JWT as the REST API, so an unauthenticated
 // browser cannot open a connection and listen in.
