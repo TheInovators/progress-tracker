@@ -1,0 +1,31 @@
+# Render blueprint for the API. The client deploys separately on Vercel.
+#
+# MONGO_URI is deliberately not defined here. Render has no managed MongoDB, so
+# point it at a MongoDB Atlas cluster and paste the connection string into the
+# Render dashboard rather than committing it.
+services:
+  - type: web
+    name: progress-tracker-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: VERCEL_PREVIEWS
+        value: 'on'
+      - key: JUDGE0_URL
+        value: https://ce.judge0.com
+      - key: JUDGE0_RAPIDAPI_KEY
+        sync: false
+      - key: STATS_TTL_MINUTES
+        value: '60'

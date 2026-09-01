@@ -124,6 +124,52 @@ Tokens and Socket.IO on the server. Judge0 for code execution.
 
 ## Deploying
 
-The client is a static Vite build, so `npm run build` in `client/` produces a `dist/` that
-drops onto Vercel or any static host. Point `VITE_API_URL` at the deployed API. The server
-runs anywhere Node runs, with `MONGO_URI`, `JWT_SECRET` and `CLIENT_ORIGIN` set.
+The API goes to Render, the client to Vercel, and the database to MongoDB Atlas. Render
+has no managed MongoDB, which is why the database is a third service rather than two.
+
+### 1. Database
+
+Create a free M0 cluster on MongoDB Atlas. Add a database user, then under Network Access
+allow `0.0.0.0/0`, because Render's free tier gives no static outbound IP to allowlist.
+Copy the connection string.
+
+### 2. API on Render
+
+`render.yaml` in the repository root describes the service, so pointing Render at this
+repo as a Blueprint picks up the build command, health check and Node version. Two
+variables are marked `sync: false` and must be pasted into the dashboard by hand:
+
+- `MONGO_URI`, the Atlas connection string
+- `CLIENT_ORIGIN`, your Vercel domain, filled in after step 3
+
+`JWT_SECRET` generates itself on first deploy. Leave it alone unless you want to sign
+every existing session out, which changing it does.
+
+The free plan sleeps after fifteen minutes of no traffic, so the first request after an
+idle period takes roughly fifty seconds while the container wakes. Stats refreshes and
+contest fetches are slow anyway, so this mostly shows up as a slow first page load.
+
+### 3. Client on Vercel
+
+Import the repository and set the root directory to `client`. `client/vercel.json` supplies
+the framework, build command and output directory, plus the rewrite that sends every path
+to `index.html`. Without that rewrite, loading `/leaderboard` directly returns a 404
+instead of the app, because the router lives entirely in the browser.
+
+Set one environment variable:
+
+```
+VITE_API_URL=https://your-api.onrender.com
+```
+
+Vite inlines this at build time, not at runtime, so changing it later needs a redeploy.
+
+### 4. Close the loop
+
+Put the Vercel domain into `CLIENT_ORIGIN` on Render. It accepts a comma-separated list.
+Setting `VERCEL_PREVIEWS=on` additionally accepts any `*.vercel.app` hostname, which is
+what makes preview deployments work without editing the variable on every branch.
+
+Both CORS and the Socket.IO handshake read the same list, so chat breaks in exactly the
+same way as the REST API if the domain is wrong. That is the first thing to check when
+the app loads but no data appears.
