@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #0b1120;
+  --color-panel: #111a2e;
+  --color-edge: #1e2c4a;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
