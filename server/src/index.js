@@ -82,6 +82,6 @@ io.on('connection', (socket) => {
   });
 });
 
-const port = Number(process.env.PORT || 5000);
+const port = Number(process.env.PORT || 5001);
 await connectDb();
 server.listen(port, () => console.log(`Progress Tracker API listening on http://localhost:${port}`));

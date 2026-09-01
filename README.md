@@ -26,14 +26,14 @@ room with a compiler beside it.
 
 ## Running it
 
-Node 20 or newer.
+Node 20 or newer. The API listens on 5001 because macOS binds port 5000 to AirPlay Receiver.
 
 ```bash
 # terminal 1
 cd server
 cp .env.example .env
 npm install
-npm run dev          # http://localhost:5000
+npm run dev          # http://localhost:5001
 
 # terminal 2
 cd client
